@@ -1,0 +1,1709 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎧 Ambient Mixer - 앰비언트 사운드 믹서</title>
+    <meta name="description" content="집중력 향상을 위한 화이트 노이즈 및 앰비언트 사운드 믹서">
+    <meta property="og:title" content="Ambient Mixer - 앰비언트 사운드 믹서">
+    <meta property="og:description" content="비, 천둥, 모닥불, 카페 등 환경음을 믹싱하여 나만의 집중 환경을 만들어보세요">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0f0f1a;
+            --bg-secondary: #1a1a2e;
+            --bg-card: #252540;
+            --bg-card-hover: #2d2d4a;
+            --text-primary: #f0f0f5;
+            --text-secondary: #9999aa;
+            --accent: #7c3aed;
+            --accent-light: #a78bfa;
+            --accent-glow: rgba(124, 58, 237, 0.3);
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --border: rgba(255, 255, 255, 0.08);
+            --shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+            --slider-track: #252540;
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #f5f5f7;
+            --bg-secondary: #ffffff;
+            --bg-card: #ffffff;
+            --bg-card-hover: #f0f0f2;
+            --text-primary: #1a1a2e;
+            --text-secondary: #666680;
+            --border: rgba(0, 0, 0, 0.08);
+            --shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+            --slider-track: #d1d5db;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        /* Ambient Background Animation */
+        .ambient-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+            opacity: 0.5;
+        }
+
+        .ambient-bg::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 30% 40%, var(--accent-glow) 0%, transparent 50%),
+                        radial-gradient(circle at 70% 60%, rgba(16, 185, 129, 0.15) 0%, transparent 40%);
+            animation: ambientMove 20s ease-in-out infinite;
+        }
+
+        @keyframes ambientMove {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(-5%, 5%) rotate(2deg); }
+            50% { transform: translate(5%, -5%) rotate(-2deg); }
+            75% { transform: translate(-3%, -3%) rotate(1deg); }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            font-size: 2.5rem;
+            filter: drop-shadow(0 0 10px var(--accent-glow));
+        }
+
+        .logo h1 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, var(--accent-light), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo span {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            display: block;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        .btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1.2rem;
+            border: none;
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn:hover {
+            background: var(--bg-card-hover);
+            transform: translateY(-2px);
+        }
+
+        .btn-icon {
+            padding: 0.6rem;
+            border-radius: 10px;
+        }
+
+        .btn-accent {
+            background: var(--accent);
+            color: white;
+            border: none;
+        }
+
+        .btn-accent:hover {
+            background: var(--accent-light);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+            border: none;
+        }
+
+        /* Master Controls */
+        .master-section {
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            padding: 1.5rem 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+        }
+
+        .master-row {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .master-play {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--accent-light));
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+            color: white;
+            transition: all 0.3s;
+            box-shadow: 0 4px 20px var(--accent-glow);
+            flex-shrink: 0;
+        }
+
+        .master-play:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 30px var(--accent-glow);
+        }
+
+        .master-play.playing {
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 4px 20px var(--accent-glow); }
+            50% { box-shadow: 0 4px 40px var(--accent-glow); }
+        }
+
+        .master-volume {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .master-volume label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .volume-value {
+            color: var(--accent-light);
+            font-weight: 600;
+        }
+
+        .timer-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .timer-display {
+            font-size: 1.5rem;
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+            color: var(--text-primary);
+            min-width: 100px;
+        }
+
+        .timer-presets {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .timer-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .timer-btn:hover, .timer-btn.active {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        /* Sliders */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 8px;
+            background: var(--slider-track);
+            border-radius: 4px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(135deg, var(--accent-light), var(--accent));
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 8px var(--accent-glow);
+            transition: transform 0.2s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(135deg, var(--accent-light), var(--accent));
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 8px var(--accent-glow);
+        }
+
+        /* Sound Grid */
+        .sounds-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .sound-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sound-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent), var(--accent-light));
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.3s;
+        }
+
+        .sound-card.active::before {
+            transform: scaleX(1);
+        }
+
+        .sound-card:hover {
+            background: var(--bg-card-hover);
+            transform: translateY(-4px);
+            box-shadow: var(--shadow);
+        }
+
+        .sound-card.active {
+            border-color: var(--accent);
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .sound-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .sound-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .sound-icon {
+            font-size: 2rem;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-primary);
+            border-radius: 12px;
+            transition: transform 0.3s;
+        }
+
+        .sound-card.active .sound-icon {
+            animation: iconBounce 1s ease-in-out infinite;
+        }
+
+        @keyframes iconBounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .sound-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .sound-desc {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .sound-toggle {
+            width: 50px;
+            height: 28px;
+            background: var(--bg-primary);
+            border-radius: 14px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.3s;
+            border: none;
+        }
+
+        .sound-toggle::after {
+            content: '';
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            background: white;
+            border-radius: 50%;
+            top: 3px;
+            left: 3px;
+            transition: transform 0.3s;
+        }
+
+        .sound-toggle.active {
+            background: var(--accent);
+        }
+
+        .sound-toggle.active::after {
+            transform: translateX(22px);
+        }
+
+        .sound-volume {
+            margin-top: 0.5rem;
+        }
+
+        .sound-volume label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.4rem;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        /* Presets Section */
+        .presets-section {
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            padding: 1.5rem 2rem;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+        }
+
+        .presets-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .presets-header h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .presets-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        .preset-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 0.75rem 1.25rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .preset-card:hover {
+            background: var(--bg-card-hover);
+            transform: translateY(-2px);
+        }
+
+        .preset-card.active {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        .preset-emoji {
+            font-size: 1.25rem;
+        }
+
+        .preset-name {
+            font-weight: 500;
+        }
+
+        .preset-delete {
+            margin-left: 0.5rem;
+            opacity: 0;
+            transition: opacity 0.2s;
+            background: none;
+            border: none;
+            color: inherit;
+            cursor: pointer;
+            padding: 0.2rem;
+        }
+
+        .preset-card:hover .preset-delete {
+            opacity: 0.7;
+        }
+
+        .preset-delete:hover {
+            opacity: 1 !important;
+        }
+
+        /* Save Preset Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            padding: 2rem;
+            width: 90%;
+            max-width: 400px;
+            transform: scale(0.9);
+            transition: transform 0.3s;
+        }
+
+        .modal-overlay.active .modal {
+            transform: scale(1);
+        }
+
+        .modal h3 {
+            margin-bottom: 1.5rem;
+            font-size: 1.25rem;
+        }
+
+        .modal-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .modal-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .emoji-picker {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .emoji-option {
+            font-size: 1.5rem;
+            padding: 0.5rem;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: var(--bg-card);
+        }
+
+        .emoji-option:hover, .emoji-option.selected {
+            border-color: var(--accent);
+            background: var(--bg-card-hover);
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: flex-end;
+        }
+
+        /* Visualizer */
+        .visualizer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 3px;
+            padding: 0 2rem 1rem;
+            pointer-events: none;
+            opacity: 0.5;
+        }
+
+        .visualizer-bar {
+            width: 4px;
+            background: linear-gradient(to top, var(--accent), var(--accent-light));
+            border-radius: 2px;
+            transition: height 0.1s ease;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .master-row {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .master-volume {
+                width: 100%;
+            }
+
+            .timer-section {
+                justify-content: center;
+            }
+
+            .sounds-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="ambient-bg"></div>
+    
+    <div class="container">
+        <header>
+            <div class="logo">
+                <span class="logo-icon">🎧</span>
+                <div>
+                    <h1>Ambient Mixer</h1>
+                    <span>집중을 위한 환경음 믹서</span>
+                </div>
+            </div>
+            <div class="header-controls">
+                <button class="btn btn-icon" id="themeToggle" title="테마 변경">🌙</button>
+                <button class="btn" id="resetBtn">
+                    <span>↺</span> 초기화
+                </button>
+            </div>
+        </header>
+
+        <!-- Master Controls -->
+        <section class="master-section">
+            <div class="master-row">
+                <button class="master-play" id="masterPlay" title="재생/일시정지">
+                    ▶
+                </button>
+                <div class="master-volume">
+                    <label>
+                        <span>🔊 마스터 볼륨</span>
+                        <span class="volume-value" id="masterVolumeValue">70%</span>
+                    </label>
+                    <input type="range" id="masterVolume" min="0" max="100" value="70">
+                </div>
+                <div class="timer-section">
+                    <span style="color: var(--text-secondary)">⏱️</span>
+                    <span class="timer-display" id="timerDisplay">--:--</span>
+                    <div class="timer-presets">
+                        <button class="timer-btn" data-minutes="15">15분</button>
+                        <button class="timer-btn" data-minutes="30">30분</button>
+                        <button class="timer-btn" data-minutes="60">1시간</button>
+                        <button class="timer-btn" data-minutes="0">∞</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sound Grid -->
+        <section class="sounds-grid" id="soundsGrid">
+            <!-- Sound cards will be generated here -->
+        </section>
+
+        <!-- Presets -->
+        <section class="presets-section">
+            <div class="presets-header">
+                <h2>💾 프리셋</h2>
+                <button class="btn btn-accent" id="savePresetBtn">
+                    <span>+</span> 저장
+                </button>
+            </div>
+            <div class="presets-grid" id="presetsGrid">
+                <!-- Presets will be generated here -->
+            </div>
+        </section>
+
+        <footer>
+            <a href="https://github.com/answndud/AmbientMixer" target="_blank">View on GitHub</a>
+        </footer>
+    </div>
+
+    <!-- Visualizer -->
+    <div class="visualizer" id="visualizer"></div>
+
+    <!-- Save Preset Modal -->
+    <div class="modal-overlay" id="saveModal">
+        <div class="modal">
+            <h3>💾 프리셋 저장</h3>
+            <input type="text" class="modal-input" id="presetName" placeholder="프리셋 이름" maxlength="20">
+            <div class="emoji-picker" id="emojiPicker">
+                <!-- Emojis will be generated -->
+            </div>
+            <div class="modal-buttons">
+                <button class="btn" id="cancelSave">취소</button>
+                <button class="btn btn-accent" id="confirmSave">저장</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sound configurations
+        const SOUNDS = [
+            { id: 'rain', name: '비', desc: 'Gentle rain', icon: '🌧️', type: 'rain' },
+            { id: 'thunder', name: '천둥', desc: 'Distant thunder', icon: '⛈️', type: 'thunder' },
+            { id: 'fire', name: '모닥불', desc: 'Crackling fire', icon: '🔥', type: 'fire' },
+            { id: 'wind', name: '바람', desc: 'Gentle breeze', icon: '🌬️', type: 'wind' },
+            { id: 'waves', name: '파도', desc: 'Ocean waves', icon: '🌊', type: 'waves' },
+            { id: 'birds', name: '새소리', desc: 'Forest birds', icon: '🐦', type: 'birds' },
+            { id: 'cafe', name: '카페', desc: 'Coffee shop', icon: '☕', type: 'cafe' },
+            { id: 'keyboard', name: '키보드', desc: 'Typing sounds', icon: '⌨️', type: 'keyboard' },
+            { id: 'whitenoise', name: '화이트 노이즈', desc: 'White noise', icon: '📻', type: 'whitenoise' },
+            { id: 'brownnoise', name: '브라운 노이즈', desc: 'Brown noise', icon: '🟤', type: 'brownnoise' },
+            { id: 'pinknoise', name: '핑크 노이즈', desc: 'Pink noise', icon: '🩷', type: 'pinknoise' },
+            { id: 'crickets', name: '귀뚜라미', desc: 'Night crickets', icon: '🦗', type: 'crickets' }
+        ];
+
+        const PRESET_EMOJIS = ['🎵', '🌙', '☀️', '🌲', '🏠', '📚', '💼', '🧘', '🎮', '💤', '🌈', '⭐'];
+
+        const DEFAULT_PRESETS = [
+            { id: 'focus', name: '집중 모드', emoji: '📚', sounds: { rain: 40, brownnoise: 30 } },
+            { id: 'sleep', name: '수면', emoji: '💤', sounds: { rain: 50, wind: 20, brownnoise: 40 } },
+            { id: 'nature', name: '자연 속', emoji: '🌲', sounds: { rain: 30, birds: 50, wind: 25 } },
+            { id: 'cozy', name: '아늑한 밤', emoji: '🔥', sounds: { fire: 60, rain: 40, thunder: 20 } }
+        ];
+
+        // Audio Context and state
+        let audioContext = null;
+        let masterGainNode = null;
+        let isPlaying = false;
+        let soundNodes = {};
+        let soundVolumes = {};
+        let timerInterval = null;
+        let remainingSeconds = 0;
+        let presets = [];
+        let selectedEmoji = '🎵';
+        
+        // Cached noise buffers for better performance
+        let noiseBuffers = {
+            white: null,
+            brown: null,
+            pink: null
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            initTheme();
+            initSounds();
+            loadPresets();
+            renderPresets();
+            initVisualizer();
+            setupEventListeners();
+        });
+
+        // Theme
+        function initTheme() {
+            const savedTheme = localStorage.getItem('ambient-theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeButton(savedTheme);
+        }
+
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('ambient-theme', next);
+            updateThemeButton(next);
+        }
+
+        function updateThemeButton(theme) {
+            document.getElementById('themeToggle').textContent = theme === 'dark' ? '☀️' : '🌙';
+        }
+
+        // Initialize Audio Context
+        function initAudioContext() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                masterGainNode = audioContext.createGain();
+                masterGainNode.connect(audioContext.destination);
+                masterGainNode.gain.value = 0.7;
+                // Clear cached buffers when creating new context
+                noiseBuffers = { white: null, brown: null, pink: null };
+            }
+            if (audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+        }
+
+        // Sound generation
+        function createNoiseBuffer(type) {
+            const bufferSize = audioContext.sampleRate * 2;
+            const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+            const output = buffer.getChannelData(0);
+
+            if (type === 'white') {
+                for (let i = 0; i < bufferSize; i++) {
+                    output[i] = Math.random() * 2 - 1;
+                }
+            } else if (type === 'brown') {
+                let lastOut = 0;
+                for (let i = 0; i < bufferSize; i++) {
+                    const white = Math.random() * 2 - 1;
+                    output[i] = (lastOut + (0.02 * white)) / 1.02;
+                    lastOut = output[i];
+                    output[i] *= 3.5;
+                }
+            } else if (type === 'pink') {
+                let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+                for (let i = 0; i < bufferSize; i++) {
+                    const white = Math.random() * 2 - 1;
+                    b0 = 0.99886 * b0 + white * 0.0555179;
+                    b1 = 0.99332 * b1 + white * 0.0750759;
+                    b2 = 0.96900 * b2 + white * 0.1538520;
+                    b3 = 0.86650 * b3 + white * 0.3104856;
+                    b4 = 0.55000 * b4 + white * 0.5329522;
+                    b5 = -0.7616 * b5 - white * 0.0168980;
+                    output[i] = b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362;
+                    output[i] *= 0.11;
+                    b6 = white * 0.115926;
+                }
+            }
+
+            return buffer;
+        }
+        
+        // Get cached noise buffer (create once, reuse)
+        function getNoiseBuffer(type) {
+            if (!noiseBuffers[type]) {
+                noiseBuffers[type] = createNoiseBuffer(type);
+            }
+            return noiseBuffers[type];
+        }
+
+        function createSound(type) {
+            const nodes = { gainNode: audioContext.createGain(), active: true };
+            nodes.gainNode.connect(masterGainNode);
+            nodes.gainNode.gain.value = 0;
+
+            switch (type) {
+                case 'whitenoise':
+                    nodes.source = audioContext.createBufferSource();
+                    nodes.source.buffer = createNoiseBuffer('white');
+                    nodes.source.loop = true;
+                    nodes.source.connect(nodes.gainNode);
+                    nodes.source.start();
+                    break;
+
+                case 'brownnoise':
+                    nodes.source = audioContext.createBufferSource();
+                    nodes.source.buffer = createNoiseBuffer('brown');
+                    nodes.source.loop = true;
+                    nodes.source.connect(nodes.gainNode);
+                    nodes.source.start();
+                    break;
+
+                case 'pinknoise':
+                    nodes.source = audioContext.createBufferSource();
+                    nodes.source.buffer = createNoiseBuffer('pink');
+                    nodes.source.loop = true;
+                    nodes.source.connect(nodes.gainNode);
+                    nodes.source.start();
+                    break;
+
+                case 'rain':
+                    // Filtered noise for rain
+                    nodes.source = audioContext.createBufferSource();
+                    nodes.source.buffer = createNoiseBuffer('white');
+                    nodes.source.loop = true;
+                    nodes.filter = audioContext.createBiquadFilter();
+                    nodes.filter.type = 'lowpass';
+                    nodes.filter.frequency.value = 3000;
+                    nodes.source.connect(nodes.filter);
+                    nodes.filter.connect(nodes.gainNode);
+                    nodes.source.start();
+                    break;
+
+                case 'thunder':
+                    // Low rumble with occasional booms
+                    nodes.source = audioContext.createBufferSource();
+                    nodes.source.buffer = createNoiseBuffer('brown');
+                    nodes.source.loop = true;
+                    nodes.filter = audioContext.createBiquadFilter();
+                    nodes.filter.type = 'lowpass';
+                    nodes.filter.frequency.value = 200;
+                    nodes.source.connect(nodes.filter);
+                    nodes.filter.connect(nodes.gainNode);
+                    nodes.source.start();
+                    scheduleThunder(nodes);
+                    break;
+
+                case 'fire':
+                    // Crackling fire
+                    nodes.source = audioContext.createBufferSource();
+                    nodes.source.buffer = createNoiseBuffer('brown');
+                    nodes.source.loop = true;
+                    nodes.filter = audioContext.createBiquadFilter();
+                    nodes.filter.type = 'bandpass';
+                    nodes.filter.frequency.value = 500;
+                    nodes.filter.Q.value = 2;
+                    nodes.source.connect(nodes.filter);
+                    nodes.filter.connect(nodes.gainNode);
+                    nodes.source.start();
+                    scheduleCrackles(nodes);
+                    break;
+
+                case 'wind':
+                    nodes.source = audioContext.createBufferSource();
+                    nodes.source.buffer = createNoiseBuffer('pink');
+                    nodes.source.loop = true;
+                    nodes.filter = audioContext.createBiquadFilter();
+                    nodes.filter.type = 'lowpass';
+                    nodes.filter.frequency.value = 400;
+                    nodes.source.connect(nodes.filter);
+                    nodes.filter.connect(nodes.gainNode);
+                    nodes.source.start();
+                    scheduleWindGusts(nodes);
+                    break;
+
+                case 'waves':
+                    // Ocean waves - use brown noise with rhythmic modulation
+                    nodes.source = audioContext.createBufferSource();
+                    nodes.source.buffer = createNoiseBuffer('brown');
+                    nodes.source.loop = true;
+                    nodes.filter = audioContext.createBiquadFilter();
+                    nodes.filter.type = 'lowpass';
+                    nodes.filter.frequency.value = 300;
+                    nodes.source.connect(nodes.filter);
+                    nodes.filter.connect(nodes.gainNode);
+                    nodes.source.start();
+                    // scheduleWaves is called from startSound with proper targetVolume
+                    break;
+
+                case 'birds':
+                    scheduleBirdChirps(nodes);
+                    break;
+
+                case 'cafe':
+                    // Cafe - subtle murmur without harsh noise
+                    nodes.source = audioContext.createBufferSource();
+                    nodes.source.buffer = createNoiseBuffer('pink');
+                    nodes.source.loop = true;
+                    nodes.filter = audioContext.createBiquadFilter();
+                    nodes.filter.type = 'bandpass';
+                    nodes.filter.frequency.value = 800;
+                    nodes.filter.Q.value = 1.5;
+                    // Additional lowpass to soften
+                    nodes.filter2 = audioContext.createBiquadFilter();
+                    nodes.filter2.type = 'lowpass';
+                    nodes.filter2.frequency.value = 2000;
+                    // Reduce base volume significantly
+                    nodes.baseGain = audioContext.createGain();
+                    nodes.baseGain.gain.value = 0.15;
+                    nodes.source.connect(nodes.filter);
+                    nodes.filter.connect(nodes.filter2);
+                    nodes.filter2.connect(nodes.baseGain);
+                    nodes.baseGain.connect(nodes.gainNode);
+                    nodes.source.start();
+                    scheduleCafeChatter(nodes);
+                    break;
+
+                case 'keyboard':
+                    scheduleKeyboardClicks(nodes);
+                    break;
+
+                case 'crickets':
+                    scheduleCrickets(nodes);
+                    break;
+            }
+
+            return nodes;
+        }
+
+        // Schedule effects for different sounds
+        function scheduleThunder(nodes) {
+            if (!nodes.active) return;
+            const now = audioContext.currentTime;
+            const volume = nodes.gainNode.gain.value;
+            if (volume > 0) {
+                nodes.gainNode.gain.setValueAtTime(volume * 0.5, now);
+                nodes.gainNode.gain.linearRampToValueAtTime(volume * 2, now + 0.5);
+                nodes.gainNode.gain.linearRampToValueAtTime(volume, now + 3);
+            }
+            nodes.thunderTimeout = setTimeout(() => scheduleThunder(nodes), 8000 + Math.random() * 15000);
+        }
+
+        function scheduleCrackles(nodes) {
+            if (!nodes.active) return;
+            const now = audioContext.currentTime;
+            const crackleGain = audioContext.createGain();
+            const noise = audioContext.createBufferSource();
+            noise.buffer = getNoiseBuffer('white');
+            const filter = audioContext.createBiquadFilter();
+            filter.type = 'highpass';
+            filter.frequency.value = 1000;
+            noise.connect(filter);
+            filter.connect(crackleGain);
+            crackleGain.connect(nodes.gainNode);
+            crackleGain.gain.setValueAtTime(0.15, now);
+            crackleGain.gain.setTargetAtTime(0, now, 0.01);
+            noise.start(now);
+            noise.stop(now + 0.05);
+            // Clean up nodes after sound finishes
+            noise.onended = () => {
+                try {
+                    filter.disconnect();
+                    crackleGain.disconnect();
+                } catch(e) {}
+            };
+            nodes.crackleTimeout = setTimeout(() => scheduleCrackles(nodes), 100 + Math.random() * 400);
+        }
+
+        function scheduleWindGusts(nodes) {
+            if (!nodes.active) return;
+            const now = audioContext.currentTime;
+            const baseFreq = 400;
+            nodes.filter.frequency.setValueAtTime(baseFreq, now);
+            nodes.filter.frequency.linearRampToValueAtTime(baseFreq + Math.random() * 200, now + 2);
+            nodes.filter.frequency.linearRampToValueAtTime(baseFreq, now + 4);
+            nodes.gustTimeout = setTimeout(() => scheduleWindGusts(nodes), 4000 + Math.random() * 3000);
+        }
+
+        function scheduleWaves(nodes) {
+            if (!nodes.active) return;
+            const now = audioContext.currentTime;
+            // Store the target volume for reference
+            if (!nodes.targetVolume) {
+                nodes.targetVolume = nodes.gainNode.gain.value || 0.5;
+            }
+            const vol = nodes.targetVolume;
+            
+            // Wave cycle: quiet -> build up -> crash -> recede
+            nodes.gainNode.gain.cancelScheduledValues(now);
+            nodes.gainNode.gain.setValueAtTime(vol * 0.1, now);
+            nodes.gainNode.gain.linearRampToValueAtTime(vol * 0.4, now + 2);
+            nodes.gainNode.gain.linearRampToValueAtTime(vol * 1.0, now + 3.5);
+            nodes.gainNode.gain.linearRampToValueAtTime(vol * 0.6, now + 4.5);
+            nodes.gainNode.gain.linearRampToValueAtTime(vol * 0.1, now + 7);
+            
+            // Also modulate the filter for the "crash" effect
+            nodes.filter.frequency.cancelScheduledValues(now);
+            nodes.filter.frequency.setValueAtTime(200, now);
+            nodes.filter.frequency.linearRampToValueAtTime(400, now + 3);
+            nodes.filter.frequency.linearRampToValueAtTime(600, now + 3.5);
+            nodes.filter.frequency.linearRampToValueAtTime(200, now + 6);
+            
+            nodes.waveTimeout = setTimeout(() => scheduleWaves(nodes), 7000 + Math.random() * 2000);
+        }
+
+        function scheduleBirdChirps(nodes) {
+            if (!nodes.active) return;
+            const now = audioContext.currentTime;
+            
+            // Create multiple notes for more realistic bird song
+            const numNotes = 2 + Math.floor(Math.random() * 4);
+            let time = now;
+            
+            for (let n = 0; n < numNotes; n++) {
+                const osc = audioContext.createOscillator();
+                const chirpGain = audioContext.createGain();
+                osc.type = 'sine';
+                
+                const baseFreq = 2500 + Math.random() * 2500;
+                osc.frequency.setValueAtTime(baseFreq, time);
+                osc.frequency.linearRampToValueAtTime(baseFreq + (Math.random() - 0.5) * 1000, time + 0.08);
+                osc.frequency.linearRampToValueAtTime(baseFreq - 500, time + 0.15);
+                
+                osc.connect(chirpGain);
+                chirpGain.connect(nodes.gainNode);
+                
+                chirpGain.gain.setValueAtTime(0, time);
+                chirpGain.gain.linearRampToValueAtTime(0.25, time + 0.02);
+                chirpGain.gain.setValueAtTime(0.25, time + 0.08);
+                chirpGain.gain.linearRampToValueAtTime(0, time + 0.15);
+                
+                osc.start(time);
+                osc.stop(time + 0.2);
+                
+                // Clean up after oscillator ends
+                osc.onended = () => {
+                    try { chirpGain.disconnect(); } catch(e) {}
+                };
+                
+                time += 0.1 + Math.random() * 0.1;
+            }
+            
+            nodes.birdTimeout = setTimeout(() => scheduleBirdChirps(nodes), 800 + Math.random() * 3000);
+        }
+
+        function scheduleCafeChatter(nodes) {
+            if (!nodes.active) return;
+            const now = audioContext.currentTime;
+            
+            // Create voice-like murmur
+            const voiceGain = audioContext.createGain();
+            const osc1 = audioContext.createOscillator();
+            const osc2 = audioContext.createOscillator();
+            const filter = audioContext.createBiquadFilter();
+            
+            // Human voice range fundamentals
+            const baseFreq = 100 + Math.random() * 150; // Male/female range
+            osc1.type = 'sawtooth';
+            osc1.frequency.value = baseFreq;
+            osc2.type = 'sawtooth';
+            osc2.frequency.value = baseFreq * 1.01; // Slight detune
+            
+            filter.type = 'bandpass';
+            filter.frequency.value = 500 + Math.random() * 1500;
+            filter.Q.value = 2;
+            
+            osc1.connect(filter);
+            osc2.connect(filter);
+            filter.connect(voiceGain);
+            voiceGain.connect(nodes.gainNode);
+            
+            const duration = 0.1 + Math.random() * 0.3;
+            voiceGain.gain.setValueAtTime(0, now);
+            voiceGain.gain.linearRampToValueAtTime(0.06, now + 0.02);
+            voiceGain.gain.setValueAtTime(0.06, now + duration - 0.02);
+            voiceGain.gain.linearRampToValueAtTime(0, now + duration);
+            
+            osc1.start(now);
+            osc1.stop(now + duration + 0.1);
+            osc2.start(now);
+            osc2.stop(now + duration + 0.1);
+            
+            // Clean up after oscillators end
+            osc1.onended = () => {
+                try {
+                    filter.disconnect();
+                    voiceGain.disconnect();
+                } catch(e) {}
+            };
+            
+            nodes.cafeTimeout = setTimeout(() => scheduleCafeChatter(nodes), 100 + Math.random() * 400);
+        }
+
+        function scheduleKeyboardClicks(nodes) {
+            if (!nodes.active) return;
+            const now = audioContext.currentTime;
+            
+            // Mechanical keyboard sound
+            const clickGain = audioContext.createGain();
+            const noise = audioContext.createBufferSource();
+            noise.buffer = getNoiseBuffer('white');
+            
+            // Click filter
+            const hipass = audioContext.createBiquadFilter();
+            hipass.type = 'highpass';
+            hipass.frequency.value = 3000;
+            
+            const lopass = audioContext.createBiquadFilter();
+            lopass.type = 'lowpass';
+            lopass.frequency.value = 8000;
+            
+            noise.connect(hipass);
+            hipass.connect(lopass);
+            lopass.connect(clickGain);
+            clickGain.connect(nodes.gainNode);
+            
+            // Sharp attack, quick decay
+            clickGain.gain.setValueAtTime(0.3, now);
+            clickGain.gain.setTargetAtTime(0.05, now, 0.005);
+            clickGain.gain.setTargetAtTime(0, now + 0.02, 0.01);
+            
+            noise.start(now);
+            noise.stop(now + 0.05);
+            
+            // Clean up after noise ends
+            noise.onended = () => {
+                try {
+                    hipass.disconnect();
+                    lopass.disconnect();
+                    clickGain.disconnect();
+                } catch(e) {}
+            };
+            
+            // Variable typing speed
+            const delay = Math.random() < 0.1 ? 300 + Math.random() * 500 : 60 + Math.random() * 140;
+            nodes.keyTimeout = setTimeout(() => scheduleKeyboardClicks(nodes), delay);
+        }
+
+        function scheduleCrickets(nodes) {
+            if (!nodes.active) return;
+            const now = audioContext.currentTime;
+            
+            // Multiple crickets at different frequencies
+            const numChirps = 1 + Math.floor(Math.random() * 2);
+            
+            for (let c = 0; c < numChirps; c++) {
+                const osc = audioContext.createOscillator();
+                const cricketGain = audioContext.createGain();
+                
+                osc.type = 'sine';
+                const freq = 3500 + Math.random() * 1500;
+                osc.frequency.value = freq;
+                
+                osc.connect(cricketGain);
+                cricketGain.connect(nodes.gainNode);
+                
+                // Rapid chirp pattern (4-6 pulses)
+                const pulses = 4 + Math.floor(Math.random() * 3);
+                const startTime = now + c * 0.3;
+                
+                cricketGain.gain.setValueAtTime(0, startTime);
+                for (let i = 0; i < pulses; i++) {
+                    const t = startTime + i * 0.05;
+                    cricketGain.gain.setValueAtTime(0.15, t);
+                    cricketGain.gain.setValueAtTime(0, t + 0.025);
+                }
+                
+                osc.start(startTime);
+                osc.stop(startTime + pulses * 0.05 + 0.1);
+                
+                // Clean up after oscillator ends
+                osc.onended = () => {
+                    try { cricketGain.disconnect(); } catch(e) {}
+                };
+            }
+            
+            nodes.cricketTimeout = setTimeout(() => scheduleCrickets(nodes), 300 + Math.random() * 1200);
+        }
+
+        // Stop sound
+        function stopSound(id) {
+            const nodes = soundNodes[id];
+            if (nodes) {
+                nodes.active = false;
+                clearTimeout(nodes.thunderTimeout);
+                clearTimeout(nodes.crackleTimeout);
+                clearTimeout(nodes.gustTimeout);
+                clearTimeout(nodes.waveTimeout);
+                clearTimeout(nodes.birdTimeout);
+                clearTimeout(nodes.cafeTimeout);
+                clearTimeout(nodes.keyTimeout);
+                clearTimeout(nodes.cricketTimeout);
+                nodes.gainNode.gain.cancelScheduledValues(audioContext.currentTime);
+                nodes.gainNode.gain.setTargetAtTime(0, audioContext.currentTime, 0.3);
+                if (nodes.source) {
+                    try { nodes.source.stop(audioContext.currentTime + 0.5); } catch(e) {}
+                }
+                setTimeout(() => {
+                    if (nodes.gainNode) nodes.gainNode.disconnect();
+                    delete soundNodes[id];
+                }, 600);
+            }
+        }
+
+        // Initialize sound cards
+        function initSounds() {
+            const grid = document.getElementById('soundsGrid');
+            SOUNDS.forEach(sound => {
+                soundVolumes[sound.id] = 0;
+                const card = document.createElement('div');
+                card.className = 'sound-card';
+                card.id = `card-${sound.id}`;
+                card.innerHTML = `
+                    <div class="sound-header">
+                        <div class="sound-info">
+                            <div class="sound-icon">${sound.icon}</div>
+                            <div>
+                                <div class="sound-name">${sound.name}</div>
+                                <div class="sound-desc">${sound.desc}</div>
+                            </div>
+                        </div>
+                        <button class="sound-toggle" data-sound="${sound.id}"></button>
+                    </div>
+                    <div class="sound-volume">
+                        <label>
+                            <span>볼륨</span>
+                            <span class="volume-value" id="vol-${sound.id}">0%</span>
+                        </label>
+                        <input type="range" id="range-${sound.id}" min="0" max="100" value="0" data-sound="${sound.id}">
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // Load presets
+        function loadPresets() {
+            const saved = localStorage.getItem('ambient-presets');
+            if (saved) {
+                presets = JSON.parse(saved);
+            } else {
+                presets = [...DEFAULT_PRESETS];
+                savePresetsToStorage();
+            }
+        }
+
+        function savePresetsToStorage() {
+            localStorage.setItem('ambient-presets', JSON.stringify(presets));
+        }
+
+        function renderPresets() {
+            const grid = document.getElementById('presetsGrid');
+            grid.innerHTML = '';
+            presets.forEach(preset => {
+                const card = document.createElement('div');
+                card.className = 'preset-card';
+                card.dataset.presetId = preset.id;
+                card.innerHTML = `
+                    <span class="preset-emoji">${preset.emoji}</span>
+                    <span class="preset-name">${preset.name}</span>
+                    <button class="preset-delete" title="삭제">✕</button>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // Apply preset
+        function applyPreset(presetId) {
+            const preset = presets.find(p => p.id === presetId);
+            if (!preset) return;
+
+            // Reset all sounds
+            SOUNDS.forEach(sound => {
+                const volume = preset.sounds[sound.id] || 0;
+                soundVolumes[sound.id] = volume;
+                document.getElementById(`range-${sound.id}`).value = volume;
+                document.getElementById(`vol-${sound.id}`).textContent = `${volume}%`;
+                
+                const card = document.getElementById(`card-${sound.id}`);
+                const toggle = card.querySelector('.sound-toggle');
+                
+                if (volume > 0) {
+                    card.classList.add('active');
+                    toggle.classList.add('active');
+                    if (isPlaying) {
+                        startSound(sound.id, sound.type, volume);
+                    }
+                } else {
+                    card.classList.remove('active');
+                    toggle.classList.remove('active');
+                    stopSound(sound.id);
+                }
+            });
+
+            // Update active state
+            document.querySelectorAll('.preset-card').forEach(c => c.classList.remove('active'));
+            document.querySelector(`[data-preset-id="${presetId}"]`)?.classList.add('active');
+        }
+
+        // Start sound
+        function startSound(id, type, volume) {
+            if (!audioContext) initAudioContext();
+            
+            if (soundNodes[id]) {
+                stopSound(id);
+            }
+
+            const nodes = createSound(type);
+            soundNodes[id] = nodes;
+            
+            // For waves, store target volume for the modulation
+            if (type === 'waves') {
+                nodes.targetVolume = volume / 100;
+                // Don't set gain directly, let scheduleWaves handle it
+                scheduleWaves(nodes);
+            } else {
+                nodes.gainNode.gain.setTargetAtTime(volume / 100, audioContext.currentTime, 0.1);
+            }
+        }
+
+        // Visualizer
+        function initVisualizer() {
+            const visualizer = document.getElementById('visualizer');
+            for (let i = 0; i < 32; i++) {
+                const bar = document.createElement('div');
+                bar.className = 'visualizer-bar';
+                bar.style.height = '4px';
+                visualizer.appendChild(bar);
+            }
+            animateVisualizer();
+        }
+
+        function animateVisualizer() {
+            if (isPlaying) {
+                const bars = document.querySelectorAll('.visualizer-bar');
+                bars.forEach(bar => {
+                    const height = Math.random() * 40 + 4;
+                    bar.style.height = `${height}px`;
+                });
+            }
+            requestAnimationFrame(animateVisualizer);
+        }
+
+        // Timer
+        function setTimer(minutes) {
+            clearInterval(timerInterval);
+            document.querySelectorAll('.timer-btn').forEach(b => b.classList.remove('active'));
+            
+            if (minutes === 0) {
+                remainingSeconds = 0;
+                document.getElementById('timerDisplay').textContent = '∞';
+                document.querySelector('[data-minutes="0"]').classList.add('active');
+                return;
+            }
+
+            remainingSeconds = minutes * 60;
+            document.querySelector(`[data-minutes="${minutes}"]`).classList.add('active');
+            updateTimerDisplay();
+            
+            timerInterval = setInterval(() => {
+                remainingSeconds--;
+                updateTimerDisplay();
+                
+                if (remainingSeconds <= 0) {
+                    clearInterval(timerInterval);
+                    stopAll();
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const mins = Math.floor(remainingSeconds / 60);
+            const secs = remainingSeconds % 60;
+            document.getElementById('timerDisplay').textContent = 
+                `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        // Play/Stop all
+        function togglePlay() {
+            if (isPlaying) {
+                stopAll();
+            } else {
+                startAll();
+            }
+        }
+
+        function startAll() {
+            initAudioContext();
+            isPlaying = true;
+            document.getElementById('masterPlay').textContent = '⏸';
+            document.getElementById('masterPlay').classList.add('playing');
+            
+            SOUNDS.forEach(sound => {
+                if (soundVolumes[sound.id] > 0) {
+                    startSound(sound.id, sound.type, soundVolumes[sound.id]);
+                }
+            });
+        }
+
+        function stopAll() {
+            isPlaying = false;
+            document.getElementById('masterPlay').textContent = '▶';
+            document.getElementById('masterPlay').classList.remove('playing');
+            
+            SOUNDS.forEach(sound => {
+                stopSound(sound.id);
+            });
+        }
+
+        function resetAll() {
+            stopAll();
+            clearInterval(timerInterval);
+            remainingSeconds = 0;
+            document.getElementById('timerDisplay').textContent = '--:--';
+            document.querySelectorAll('.timer-btn').forEach(b => b.classList.remove('active'));
+            
+            SOUNDS.forEach(sound => {
+                soundVolumes[sound.id] = 0;
+                document.getElementById(`range-${sound.id}`).value = 0;
+                document.getElementById(`vol-${sound.id}`).textContent = '0%';
+                document.getElementById(`card-${sound.id}`).classList.remove('active');
+                document.querySelector(`[data-sound="${sound.id}"].sound-toggle`).classList.remove('active');
+            });
+            
+            document.querySelectorAll('.preset-card').forEach(c => c.classList.remove('active'));
+        }
+
+        // Event listeners
+        function setupEventListeners() {
+            // Theme toggle
+            document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+            
+            // Master play
+            document.getElementById('masterPlay').addEventListener('click', togglePlay);
+            
+            // Master volume
+            document.getElementById('masterVolume').addEventListener('input', (e) => {
+                const value = e.target.value;
+                document.getElementById('masterVolumeValue').textContent = `${value}%`;
+                if (masterGainNode) {
+                    masterGainNode.gain.setTargetAtTime(value / 100, audioContext.currentTime, 0.1);
+                }
+            });
+            
+            // Reset
+            document.getElementById('resetBtn').addEventListener('click', resetAll);
+            
+            // Timer buttons
+            document.querySelectorAll('.timer-btn').forEach(btn => {
+                btn.addEventListener('click', () => setTimer(parseInt(btn.dataset.minutes)));
+            });
+            
+            // Sound toggles
+            document.querySelectorAll('.sound-toggle').forEach(toggle => {
+                toggle.addEventListener('click', () => {
+                    const id = toggle.dataset.sound;
+                    const card = document.getElementById(`card-${id}`);
+                    const range = document.getElementById(`range-${id}`);
+                    const volDisplay = document.getElementById(`vol-${id}`);
+                    const sound = SOUNDS.find(s => s.id === id);
+                    
+                    if (toggle.classList.contains('active')) {
+                        toggle.classList.remove('active');
+                        card.classList.remove('active');
+                        soundVolumes[id] = 0;
+                        range.value = 0;
+                        volDisplay.textContent = '0%';
+                        stopSound(id);
+                    } else {
+                        toggle.classList.add('active');
+                        card.classList.add('active');
+                        soundVolumes[id] = 50;
+                        range.value = 50;
+                        volDisplay.textContent = '50%';
+                        if (isPlaying) {
+                            startSound(id, sound.type, 50);
+                        }
+                    }
+                });
+            });
+            
+            // Volume sliders
+            document.querySelectorAll('input[type="range"][data-sound]').forEach(range => {
+                range.addEventListener('input', () => {
+                    const id = range.dataset.sound;
+                    const value = parseInt(range.value);
+                    const card = document.getElementById(`card-${id}`);
+                    const toggle = card.querySelector('.sound-toggle');
+                    const volDisplay = document.getElementById(`vol-${id}`);
+                    const sound = SOUNDS.find(s => s.id === id);
+                    
+                    soundVolumes[id] = value;
+                    volDisplay.textContent = `${value}%`;
+                    
+                    if (value > 0) {
+                        card.classList.add('active');
+                        toggle.classList.add('active');
+                        if (isPlaying) {
+                            if (soundNodes[id]) {
+                                // For waves, update targetVolume instead of direct gain
+                                if (sound.type === 'waves') {
+                                    soundNodes[id].targetVolume = value / 100;
+                                } else {
+                                    soundNodes[id].gainNode.gain.setTargetAtTime(value / 100, audioContext.currentTime, 0.1);
+                                }
+                            } else {
+                                startSound(id, sound.type, value);
+                            }
+                        }
+                    } else {
+                        card.classList.remove('active');
+                        toggle.classList.remove('active');
+                        stopSound(id);
+                    }
+                });
+            });
+            
+            // Presets
+            document.getElementById('presetsGrid').addEventListener('click', (e) => {
+                const card = e.target.closest('.preset-card');
+                if (!card) return;
+                
+                if (e.target.classList.contains('preset-delete')) {
+                    const id = card.dataset.presetId;
+                    presets = presets.filter(p => p.id !== id);
+                    savePresetsToStorage();
+                    renderPresets();
+                    return;
+                }
+                
+                applyPreset(card.dataset.presetId);
+            });
+            
+            // Save preset modal
+            document.getElementById('savePresetBtn').addEventListener('click', openSaveModal);
+            document.getElementById('cancelSave').addEventListener('click', closeSaveModal);
+            document.getElementById('confirmSave').addEventListener('click', savePreset);
+            document.getElementById('saveModal').addEventListener('click', (e) => {
+                if (e.target.id === 'saveModal') closeSaveModal();
+            });
+            
+            // Emoji picker
+            const emojiPicker = document.getElementById('emojiPicker');
+            PRESET_EMOJIS.forEach(emoji => {
+                const btn = document.createElement('span');
+                btn.className = 'emoji-option';
+                btn.textContent = emoji;
+                if (emoji === selectedEmoji) btn.classList.add('selected');
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.emoji-option').forEach(e => e.classList.remove('selected'));
+                    btn.classList.add('selected');
+                    selectedEmoji = emoji;
+                });
+                emojiPicker.appendChild(btn);
+            });
+        }
+
+        function openSaveModal() {
+            document.getElementById('saveModal').classList.add('active');
+            document.getElementById('presetName').value = '';
+            document.getElementById('presetName').focus();
+        }
+
+        function closeSaveModal() {
+            document.getElementById('saveModal').classList.remove('active');
+        }
+
+        function savePreset() {
+            const name = document.getElementById('presetName').value.trim();
+            if (!name) {
+                document.getElementById('presetName').focus();
+                return;
+            }
+            
+            const sounds = {};
+            SOUNDS.forEach(sound => {
+                if (soundVolumes[sound.id] > 0) {
+                    sounds[sound.id] = soundVolumes[sound.id];
+                }
+            });
+            
+            if (Object.keys(sounds).length === 0) {
+                alert('최소 하나의 사운드를 선택해주세요.');
+                return;
+            }
+            
+            const preset = {
+                id: 'custom-' + Date.now(),
+                name: name,
+                emoji: selectedEmoji,
+                sounds: sounds
+            };
+            
+            presets.push(preset);
+            savePresetsToStorage();
+            renderPresets();
+            closeSaveModal();
+        }
+    </script>
+</body>
+</html>
+
