@@ -29,7 +29,7 @@
             --slider-track: #252540;
         }
 
-        :root {
+        [data-theme="light"] {
             --bg-primary: #f5f5f7;
             --bg-secondary: #ffffff;
             --bg-card: #ffffff;
@@ -676,7 +676,32 @@
     </style>
     <!-- Minimal sharp visual system -->
     <style id="minimal-sharp-theme">
-html, body {
+        :root, [data-theme="light"], [data-theme="dark"] {
+            --bg-primary: #ffffff;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #ffffff;
+            --bg-card: #ffffff;
+            --bg-card-hover: #ffffff;
+            --bg-input: #ffffff;
+            --bg: #ffffff;
+            --panel: #ffffff;
+            --panel-strong: #ffffff;
+            --preview-bg: #ffffff;
+            --accent: #D2E0E5;
+            --accent-primary: #D2E0E5;
+            --accent-secondary: #D2E0E5;
+            --accent-light: #D2E0E5;
+            --accent-strong: #D2E0E5;
+            --accent-dim: #D2E0E5;
+            --primary: #D2E0E5;
+            --primary-color: #D2E0E5;
+            --gradient-accent: none;
+            --gradient-1: none;
+            --gradient-2: none;
+            --gradient-3: none;
+        }
+
+        html, body {
             background: #ffffff !important;
         }
 
@@ -701,7 +726,42 @@ html, body {
     </style>
     <!-- Rational project palette -->
     <style id="rational-project-palette">
-html, body {
+        :root, [data-theme="light"], [data-theme="dark"] {
+            --bg-primary: #FFFFFF;
+            --bg-secondary: #F4F7F8;
+            --bg-tertiary: #F4F7F8;
+            --bg-card: #FFFFFF;
+            --bg-card-hover: #F4F7F8;
+            --bg-input: #F1F4F5;
+            --bg: #FFFFFF;
+            --panel: #FFFFFF;
+            --panel-strong: #F4F7F8;
+            --preview-bg: #F4F7F8;
+            --text-primary: #182026;
+            --text-secondary: #65727A;
+            --text-muted: #65727A;
+            --border: #D8E1E4;
+            --border-color: #D8E1E4;
+            --border-hover: #7B9DA8;
+            --accent: #7B9DA8;
+            --accent-primary: #7B9DA8;
+            --accent-secondary: #557782;
+            --accent-light: #F4F7F8;
+            --accent-strong: #557782;
+            --accent-dim: #F4F7F8;
+            --primary: #7B9DA8;
+            --primary-color: #7B9DA8;
+            --success: #3F7D5A;
+            --warning: #A87832;
+            --danger: #A65353;
+            --error: #A65353;
+            --gradient-accent: none;
+            --gradient-1: none;
+            --gradient-2: none;
+            --gradient-3: none;
+        }
+
+        html, body {
             background: #FFFFFF !important;
             color: #182026 !important;
         }
@@ -724,7 +784,42 @@ html, body {
     </style>
     <!-- MarkdownPreview shared visual system -->
     <style id="markdown-preview-theme">
-html, body {
+        :root, [data-theme="light"], [data-theme="dark"] {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f6f8fa;
+            --bg-tertiary: #f6f8fa;
+            --bg-card: #ffffff;
+            --bg-card-hover: #f6f8fa;
+            --bg-editor: #ffffff;
+            --bg-input: #f6f8fa;
+            --bg: #ffffff;
+            --panel: #ffffff;
+            --panel-strong: #f6f8fa;
+            --preview-bg: #f6f8fa;
+            --accent: #0969da;
+            --accent-primary: #0969da;
+            --accent-secondary: #0550ae;
+            --accent-light: #f6f8fa;
+            --accent-strong: #0550ae;
+            --primary: #0969da;
+            --primary-color: #0969da;
+            --text-primary: #24292f;
+            --text-secondary: #57606a;
+            --text-muted: #8c959f;
+            --border: #d0d7de;
+            --border-color: #d0d7de;
+            --border-hover: #0969da;
+            --code-bg: #f6f8fa;
+            --blockquote-border: #0969da;
+            --link-color: #0969da;
+            --table-border: #d0d7de;
+            --table-alt-bg: #f6f8fa;
+            --gradient-accent: linear-gradient(135deg, #0969da 0%, #0550ae 100%);
+            --shadow: 0 1px 2px rgba(27, 31, 36, 0.08);
+            --shadow-card: 0 1px 2px rgba(27, 31, 36, 0.08);
+        }
+
+        html, body {
             background: #ffffff !important;
             color: #24292f !important;
         }
@@ -795,6 +890,7 @@ html, body {
                 </div>
             </div>
             <div class="header-controls">
+                <button class="btn btn-icon" id="themeToggle" title="테마 변경">🌙</button>
                 <button class="btn" id="resetBtn">
                     <span>↺</span> 초기화
                 </button>
@@ -914,12 +1010,32 @@ html, body {
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
+            initTheme();
             initSounds();
             loadPresets();
             renderPresets();
             initVisualizer();
             setupEventListeners();
         });
+
+        // Theme
+        function initTheme() {
+            const savedTheme = localStorage.getItem('ambient-theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeButton(savedTheme);
+        }
+
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('ambient-theme', next);
+            updateThemeButton(next);
+        }
+
+        function updateThemeButton(theme) {
+            document.getElementById('themeToggle').textContent = theme === 'dark' ? '☀️' : '🌙';
+        }
 
         // Initialize Audio Context
         function initAudioContext() {
@@ -1620,6 +1736,8 @@ html, body {
 
         // Event listeners
         function setupEventListeners() {
+            // Theme toggle
+            document.getElementById('themeToggle').addEventListener('click', toggleTheme);
             
             // Master play
             document.getElementById('masterPlay').addEventListener('click', togglePlay);
